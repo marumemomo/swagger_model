@@ -1,8 +1,54 @@
 # SwaggerModel
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/swagger_model`. To experiment with that code, run `bin/console` for an interactive prompt.
+Convert json to swagger model yaml
 
-TODO: Delete this and the text above, and describe your gem
+Example.json
+```json
+{
+  "user": {
+    "name": "marumemomo",
+    "age": 24
+  },
+  "message": "hello",
+  "created_at": "2018-05-05T20:02:24.000+09:00",
+  "updated_at": null
+}
+
+```
+
+to Example_model.yaml
+```yaml
+---
+Example:
+  type: object
+  properties:
+    user:
+      type: object
+      properties:
+        name:
+          type: string
+          example: marumemomo
+        age:
+          type: integer
+          example: 24
+      required:
+      - name
+      - age
+    message:
+      type: string
+      example: hello
+    created_at:
+      type: string
+      example: '2018-05-05T20:02:24.000+09:00'
+      format: date-time
+    updated_at:
+      type: ''
+      example: ''
+  required:
+  - user
+  - message
+  - created_at
+```
 
 ## Installation
 
