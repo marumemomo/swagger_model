@@ -22,7 +22,11 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+```ruby
+require 'swagger_model'
+
+SwaggerModel.create_from_json(json_file_path: 'example/Example.json', output_path: './example/output/')
+```
 
 ## Development
 
@@ -32,7 +36,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/swagger_model.
+Bug reports and pull requests are welcome on GitHub at https://github.com/marumemomo/swagger_model.
 
 ## License
 
