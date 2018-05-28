@@ -2,6 +2,8 @@ require "swagger_model/version"
 require 'json'
 require 'yaml'
 require 'date'
+require 'active_support'
+require 'active_support/core_ext'
 
 module SwaggerModel
   def self.date_time_valid?(str)
@@ -13,20 +15,63 @@ module SwaggerModel
     end
   end
 
-  def self.get_property(value)
+  def self.get_property(key, value, model, root_key)
     type_class = value.class.to_s
     obj = {}
     case type_class
     when 'Hash'
-      obj['type'] = 'object'
-      object = parse_object value
-      obj['properties'] = object['properties']
-      if object['required'].size > 0
-        obj['required'] = object['required']
+      if value.has_key?('id') && value.has_key?('type')
+        model_name = ActiveSupport::Inflector.classify(value['type'])
+        object = parse_object(value, model, model_name)
+        properties = object['properties']
+        newProperties = {}
+        newProperties['allOf'] = []
+        newProperties['allOf'][0] = {}
+        newProperties['allOf'][0]['$ref'] = '#/components/schemas/ModelBase'
+        newProperties['allOf'][1] = {}
+        newProperties['allOf'][1]['type'] = 'object'
+        if object['required'].size > 0
+            newProperties['allOf'][1]['required'] = object['required']
+        end
+        properties.delete('id')
+        properties.delete('type')
+        newProperties['allOf'][1]['properties'] = properties
+        model[model_name] = newProperties
+        obj['$ref'] = '#/components/schemas/' + model_name
+      elsif key == 'attributes'
+        object = parse_object(value, model, root_key)
+        properties = object['properties']
+        model_name = root_key + 'Attributes'
+        model[model_name] = {}
+        model[model_name]['type'] = 'object'
+        model[model_name]['properties'] = properties
+        if object['required'].size > 0
+          model[model_name]['required'] = object['required']
+        end
+        obj['$ref'] = '#/components/schemas/' + model_name
+      elsif key == 'relationships'
+        object = parse_object(value, model, root_key)
+        properties = object['properties']
+        model_name = root_key + 'Relationships'
+        model[model_name] = {}
+        model[model_name]['type'] = 'object'
+        model[model_name]['properties'] = properties
+        if object['required'].size > 0
+          model[model_name]['required'] = object['required']
+        end
+        obj['$ref'] = '#/components/schemas/' + model_name
+      else
+        object = parse_object(value, model, root_key)
+        properties = object['properties']
+        obj['type'] = 'object'
+        obj['properties'] = properties
+        if object['required'].size > 0
+          obj['required'] = object['required']
+        end
       end
     when 'Array'
       obj['type'] = 'array'
-      obj['items'] = parse_array value
+      obj['items'] = parse_array(value, model, root_key)
     when 'String'
       obj['type'] = 'string'
       obj['example'] = value
@@ -50,21 +95,23 @@ module SwaggerModel
     obj
   end
 
-  def self.parse_array items
+  def self.parse_array(items, model, root_key)
     m = {}
     value = items.first
-    get_property(value)
+    get_property(nil, value, model, root_key)
   end
 
-  def self.parse_object res
+  def self.parse_object(res, model, root_key)
     keys = res.keys
     m = {}
     required = []
     for key in keys do
       value = res[key]
-      m[key] = get_property(value)
+      m[key] = get_property(key, value, model, root_key)
       if m[key]['type'] != ''
-        required.push(key)
+        unless (keys.include?('id') && keys.include?('type')) && (key == 'id' || key == 'type')
+          required.push(key)
+        end
       end
     end
     obj = {}
@@ -82,8 +129,21 @@ module SwaggerModel
     model = {}
     model[model_name] = {}
     model[model_name]['type'] = "object"
-    object = parse_object response
-    model[model_name]['properties'] = object['properties']
+    object = parse_object(response, model, model_name)
+    properties = object['properties']
+    if properties.has_key?('links')
+      links = {}
+      links['$ref'] = '#/components/schemas/Links'
+      properties['links'] = links
+    end
+    if properties.has_key?('meta')
+      meta_name = model_name + 'Meta'
+      model[meta_name] = properties['meta']
+      meta = {}
+      meta['$ref'] = '#/components/schemas/' + meta_name
+      properties['meta'] = meta
+    end
+    model[model_name]['properties'] = properties
     if object['required'].size > 0
       model[model_name]['required'] = object['required']
     end
