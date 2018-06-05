@@ -4,6 +4,7 @@ require 'yaml'
 require 'date'
 require 'active_support'
 require 'active_support/core_ext'
+require 'fileutils'
 
 module SwaggerModel
   def self.date_time_valid?(str)
@@ -22,6 +23,7 @@ module SwaggerModel
     when 'Hash'
       if value.has_key?('id') && value.has_key?('type')
         model_name = ActiveSupport::Inflector.classify(value['type'])
+        model[model_name] = {}
         object = parse_object(value, model, model_name)
         properties = object['properties']
         newProperties = {}
@@ -36,28 +38,28 @@ module SwaggerModel
         properties.delete('id')
         properties.delete('type')
         newProperties['allOf'][1]['properties'] = properties
-        model[model_name] = newProperties
+        model[model_name][model_name] = newProperties
         obj['$ref'] = '#/components/schemas/' + model_name
       elsif key == 'attributes'
         object = parse_object(value, model, root_key)
         properties = object['properties']
         model_name = root_key + 'Attributes'
-        model[model_name] = {}
-        model[model_name]['type'] = 'object'
-        model[model_name]['properties'] = properties
+        model[root_key][model_name] = {}
+        model[root_key][model_name]['type'] = 'object'
+        model[root_key][model_name]['properties'] = properties
         if object['required'].size > 0
-          model[model_name]['required'] = object['required']
+          model[root_key][model_name]['required'] = object['required']
         end
         obj['$ref'] = '#/components/schemas/' + model_name
       elsif key == 'relationships'
         object = parse_object(value, model, root_key)
         properties = object['properties']
         model_name = root_key + 'Relationships'
-        model[model_name] = {}
-        model[model_name]['type'] = 'object'
-        model[model_name]['properties'] = properties
+        model[root_key][model_name] = {}
+        model[root_key][model_name]['type'] = 'object'
+        model[root_key][model_name]['properties'] = properties
         if object['required'].size > 0
-          model[model_name]['required'] = object['required']
+          model[root_key][model_name]['required'] = object['required']
         end
         obj['$ref'] = '#/components/schemas/' + model_name
       else
@@ -135,7 +137,8 @@ module SwaggerModel
     response_model = {}
     response_model[response_name] = {}
     response_model[response_name]['type'] = "object"
-    object = parse_object(response, response_model, response_name)
+    model = {}
+    object = parse_object(response, model, response_name)
     properties = object['properties']
     if properties.has_key?('links')
       links = {}
@@ -154,10 +157,17 @@ module SwaggerModel
       response_model[response_name]['required'] = object['required']
     end
     output_path = params[:output_path] || './'
-    if params[:output_type] == 'json'
-      File.write(File.join(output_path, "#{response_name}_model.json"), response_model.to_json)
-    else
-      File.write(File.join(output_path, "#{response_name}_model.yaml"), response_model.to_yaml)
+    output_path_responses = File.join(output_path, 'Responses/')
+    output_path_models = File.join(output_path, 'Models/')
+
+    FileUtils::mkdir_p output_path_responses
+    FileUtils::mkdir_p output_path_models
+
+    File.write(File.join(output_path_responses, "#{response_name}.yaml"), response_model.to_yaml)
+
+    keys = model.keys
+    for key in keys do
+      File.write(File.join(output_path_models, "#{key}.yaml"), model[key].to_yaml)
     end
   end
 end
