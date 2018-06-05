@@ -71,7 +71,19 @@ Or install it yourself as:
 ```ruby
 require 'swagger_model'
 
-SwaggerModel.create_from_json(json_file_path: 'example/Example.json', output_path: './example/output/')
+json = <<-EOS
+{
+  "user": {
+    "name": "marumemomo",
+    "age": 24
+  },
+  "message": "hello",
+  "created_at": "2018-05-05T20:02:24.000+09:00",
+  "updated_at": null
+}
+EOS
+
+SwaggerModel.create_from_json(json_string: json, output_path: './example/output/', response_name: "ExampleResponse")
 ```
 
 ## Development

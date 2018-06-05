@@ -1,5 +1,5 @@
 ---
-Example:
+ExampleResponse:
   type: object
   properties:
     user:

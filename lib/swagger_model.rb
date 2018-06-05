@@ -120,16 +120,22 @@ module SwaggerModel
     obj
   end
   def self.create_from_json(params)
-    json_file_path = params[:json_file_path] || gets
-    json = open(json_file_path) do |io|
-      JSON.load(io)
+    response = {}.to_json
+    json_string = params[:json_string]
+    if !json_string.nil?
+      response = JSON.load(json_string)
+    else
+      json_file_path = params[:json_file_path] || gets
+      json = open(json_file_path) do |io|
+        JSON.load(io)
+      end
+      response = json
     end
-    model_name = params[:model_name] || File.basename(json_file_path, '.json')
-    response = json
-    model = {}
-    model[model_name] = {}
-    model[model_name]['type'] = "object"
-    object = parse_object(response, model, model_name)
+    response_name = params[:response_name] || gets
+    response_model = {}
+    response_model[response_name] = {}
+    response_model[response_name]['type'] = "object"
+    object = parse_object(response, response_model, response_name)
     properties = object['properties']
     if properties.has_key?('links')
       links = {}
@@ -137,21 +143,21 @@ module SwaggerModel
       properties['links'] = links
     end
     if properties.has_key?('meta')
-      meta_name = model_name + 'Meta'
-      model[meta_name] = properties['meta']
+      meta_name = response_name + 'Meta'
+      response_model[meta_name] = properties['meta']
       meta = {}
       meta['$ref'] = '#/components/schemas/' + meta_name
       properties['meta'] = meta
     end
-    model[model_name]['properties'] = properties
+    response_model[response_name]['properties'] = properties
     if object['required'].size > 0
-      model[model_name]['required'] = object['required']
+      response_model[response_name]['required'] = object['required']
     end
     output_path = params[:output_path] || './'
     if params[:output_type] == 'json'
-      File.write(File.join(output_path, "#{model_name}_model.json"), model.to_json)
+      File.write(File.join(output_path, "#{response_name}_model.json"), response_model.to_json)
     else
-      File.write(File.join(output_path, "#{model_name}_model.yaml"), model.to_yaml)
+      File.write(File.join(output_path, "#{response_name}_model.yaml"), response_model.to_yaml)
     end
   end
 end
