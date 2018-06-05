@@ -22,7 +22,7 @@ module SwaggerModel
     case type_class
     when 'Hash'
       if value.has_key?('id') && value.has_key?('type')
-        model_name = ActiveSupport::Inflector.classify(value['type'])
+        model_name = ActiveSupport::Inflector.classify(value['type'].gsub('-', '_'))
         model[model_name] = {}
         object = parse_object(value, model, model_name)
         properties = object['properties']
@@ -72,8 +72,14 @@ module SwaggerModel
         end
       end
     when 'Array'
-      obj['type'] = 'array'
-      obj['items'] = parse_array(value, model, root_key)
+      if key == 'included'
+        obj['type'] = 'array'
+        obj['items'] = {}
+        obj['items']['oneOf'] = parse_array_with_multi_model(value, model, root_key)
+      else
+        obj['type'] = 'array'
+        obj['items'] = parse_array(value, model, root_key)
+      end
     when 'String'
       obj['type'] = 'string'
       obj['example'] = value
@@ -101,6 +107,14 @@ module SwaggerModel
     m = {}
     value = items.first
     get_property(nil, value, model, root_key)
+  end
+
+  def self.parse_array_with_multi_model(items, model, root_key)
+    types = []
+    items.each do |value|
+      types.push(get_property(nil, value, model, root_key))
+    end
+    types
   end
 
   def self.parse_object(res, model, root_key)
