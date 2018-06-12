@@ -256,7 +256,8 @@ module SwaggerModel
         end
       when 'Array'
         if key == 'included'
-          @logger.warn("Cannot parse `included` key Array")
+          @logger.error("Cannot create model because of included `included` key")
+          exit
         else
           obj['type'] = 'array'
           obj['items'] = parse_array(value, model, root_key)
