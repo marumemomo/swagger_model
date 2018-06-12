@@ -256,8 +256,17 @@ module SwaggerModel
         end
       when 'Array'
         if key == 'included'
-          @logger.error("Cannot create model because of included `included` key")
-          exit
+          obj['type'] = 'array'
+          obj['items'] = {}
+          array = parse_array_with_multi_model(value, model, root_key)
+          p array
+          if array.size < 2
+            obj['type'] = 'array'
+            obj['items'] = array[0]
+          else
+            @logger.error("Cannot create model because of 2 or more models included in Array")
+            exit
+          end
         else
           obj['type'] = 'array'
           obj['items'] = parse_array(value, model, root_key)
@@ -289,6 +298,19 @@ module SwaggerModel
       m = {}
       value = items.first
       get_property(nil, value, model, root_key)
+    end
+
+    def self.parse_array_with_multi_model(items, model, root_key)
+      types = []
+      refs = []
+      items.each do |value|
+        property = get_property(nil, value, model, root_key)
+        if !refs.include?(property['$ref'])
+          types.push(get_property(nil, value, model, root_key))
+          refs.push(property['$ref'])
+        end
+      end
+      types
     end
 
     def self.parse_object(res, model, root_key)
