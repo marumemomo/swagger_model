@@ -68,22 +68,48 @@ Or install it yourself as:
 
 ## Usage
 
+### Swagger v2
+
 ```ruby
 require 'swagger_model'
 
 json = <<-EOS
 {
-  "user": {
-    "name": "marumemomo",
-    "age": 24
-  },
-  "message": "hello",
-  "created_at": "2018-05-05T20:02:24.000+09:00",
-  "updated_at": null
+  "data": {
+    "id": "id",
+    "type": "users",
+    "attributes": {
+      "name": "marumemomo",
+      "age": 24
+    }
+  }
 }
 EOS
+EOS
 
-SwaggerModel.create_from_json(json_string: json, output_path: './example/output/', response_name: "ExampleResponse")
+SwaggerModel::SwaggerV2.create_from_json(json_string: json, output_path: './example/output/', response_name: "ExampleResponse")
+```
+
+### OpenAPI v3
+
+```ruby
+require 'swagger_model'
+
+json = <<-EOS
+{
+  "data": {
+    "id": "id",
+    "type": "users",
+    "attributes": {
+      "name": "marumemomo",
+      "age": 24
+    }
+  }
+}
+EOS
+EOS
+
+SwaggerModel::OpenAPIv3.create_from_json(json_string: json, output_path: './example/output/', response_name: "ExampleResponse")
 ```
 
 ## Development
