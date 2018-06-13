@@ -25,8 +25,16 @@ describe 'read json' do
         "type": "users",
         "attributes": {
           "name": "marumemomo",
-          "age": 24
+          "age": 24,
+          "lang": null
         }
+      },
+      "links": {
+        "self": "http://example.com?page=2",
+        "first": "http://example.com?page=1",
+        "prev": "http://example.com?page=1",
+        "next": "http://example.com?page=3",
+        "last": "http://example.com?page=100"
       }
     }
     EOS

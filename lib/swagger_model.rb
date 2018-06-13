@@ -210,17 +210,11 @@ module SwaggerModel
           object = parse_object(value, model, model_name)
           properties = object['properties']
           newProperties = {}
-          newProperties['allOf'] = []
-          newProperties['allOf'][0] = {}
-          newProperties['allOf'][0]['$ref'] = '#/definitions/ModelBase'
-          newProperties['allOf'][1] = {}
-          newProperties['allOf'][1]['type'] = 'object'
+          newProperties['type'] = 'object'
           if object['required'].size > 0
-              newProperties['allOf'][1]['required'] = object['required']
+              newProperties['required'] = object['required']
           end
-          properties.delete('id')
-          properties.delete('type')
-          newProperties['allOf'][1]['properties'] = properties
+          newProperties['properties'] = properties
           model[model_name][model_name] = newProperties
           obj['$ref'] = '#/definitions/' + model_name
         elsif key == 'attributes'
@@ -288,6 +282,7 @@ module SwaggerModel
         obj['format'] = 'float'
         obj['example'] = value
       else
+        @logger.warn("Unrecognized Type of `#{key}`. [key: #{key}, root_key: #{root_key}]")
         obj['type'] = ''
         obj['example'] = ''
       end
@@ -321,9 +316,7 @@ module SwaggerModel
         value = res[key]
         m[key] = get_property(key, value, model, root_key)
         if m[key]['type'] != ''
-          unless (keys.include?('id') && keys.include?('type')) && (key == 'id' || key == 'type')
-            required.push(key)
-          end
+          required.push(key)
         end
       end
       obj = {}
@@ -354,6 +347,30 @@ module SwaggerModel
         links = {}
         links['$ref'] = '#/definitions/Links'
         properties['links'] = links
+        if response_model['Links'].nil?
+          response_model['Links'] = {
+            'self' => {
+              'type' => "string",
+              'example' => "https://contents.kurashiru.com/api/v1/videos?page%5Bnumber%5D=2&page%5Bsize%5D=20"
+            },
+            'first' => {
+              'type' => "string",
+              'example' => "https://contents.kurashiru.com/api/v1/videos?page%5Bnumber%5D=1&page%5Bsize%5D=20"
+            },
+            'prev' => {
+              'type' => "string",
+              'example' => "https://contents.kurashiru.com/api/v1/videos?page%5Bnumber%5D=1&page%5Bsize%5D=20"
+            },
+            'next' => {
+              'type' => "string",
+              'example' => "https://contents.kurashiru.com/api/v1/videos?page%5Bnumber%5D=3&page%5Bsize%5D=20"
+            },
+            'last' => {
+              'type' => "string",
+              'example' => "https://contents.kurashiru.com/api/v1/videos?page%5Bnumber%5D=100&page%5Bsize%5D=20"
+            }
+          }
+        end
       end
       if properties.has_key?('meta')
         meta_name = response_name + 'Meta'
