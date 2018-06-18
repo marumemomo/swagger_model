@@ -38,6 +38,6 @@ describe 'read json' do
       }
     }
     EOS
-    SwaggerModel::SwaggerV2.create_from_json(json_string: json, output_path: './example/output/', response_name: "ExampleResponseV2")
+    result = SwaggerModel::SwaggerV2.create_from_json(json_string: json, output_path: './example/output/', response_name: "ExampleResponseV2")
   end
 end

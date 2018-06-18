@@ -396,6 +396,15 @@ module SwaggerModel
       for key in keys do
         File.write(File.join(output_path_models, "#{key}.yaml"), model[key].to_yaml)
       end
+
+      models = {}
+      for key in keys do
+        models[key] = model[key]
+      end
+      result = {
+        "responses" => response_model,
+        "models" => models
+      }
     end
   end
 end
