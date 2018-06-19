@@ -383,6 +383,10 @@ module SwaggerModel
       if object['required'].size > 0
         response_model[response_name]['required'] = object['required']
       end
+
+      # add example
+      response_model[response_name]['example'] = response
+
       output_path = params[:output_path] || './'
       output_path_responses = File.join(output_path, 'Responses/')
       output_path_models = File.join(output_path, 'Models/')
