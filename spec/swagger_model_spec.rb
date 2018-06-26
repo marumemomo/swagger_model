@@ -27,6 +27,16 @@ describe 'read json' do
           "name": "marumemomo",
           "age": 24,
           "lang": null
+        },
+        "relationships": {
+          "articles": {
+            "data": [
+              {
+                "id": "1",
+                "type": "articles"
+              }
+            ]
+          }
         }
       },
       "links": {
@@ -35,7 +45,17 @@ describe 'read json' do
         "prev": "http://example.com?page=1",
         "next": "http://example.com?page=3",
         "last": "http://example.com?page=100"
-      }
+      },
+      "included": [
+        {
+          "id": "1",
+          "type": "articles",
+          "attributes": {
+            "title": "title",
+            "published_at": "2018-05-30T11:00:00.000+09:00"
+          }
+        }
+      ]
     }
     EOS
     result = SwaggerModel::SwaggerV2.create_from_json(json_string: json, output_path: './example/output/', response_name: "ExampleResponseV2")

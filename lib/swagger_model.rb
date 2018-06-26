@@ -249,22 +249,8 @@ module SwaggerModel
           end
         end
       when 'Array'
-        if key == 'included'
-          obj['type'] = 'array'
-          obj['items'] = {}
-          array = parse_array_with_multi_model(value, model, root_key)
-          p array
-          if array.size < 2
-            obj['type'] = 'array'
-            obj['items'] = array[0]
-          else
-            @logger.error("Cannot create model because of 2 or more models included in Array")
-            exit
-          end
-        else
-          obj['type'] = 'array'
-          obj['items'] = parse_array(value, model, root_key)
-        end
+        obj['type'] = 'array'
+        obj['items'] = parse_array(value, model, root_key)
       when 'String'
         obj['type'] = 'string'
         obj['example'] = value
@@ -343,6 +329,9 @@ module SwaggerModel
       model = {}
       object = parse_object(response, model, response_name)
       properties = object['properties']
+      if properties.has_key?('included')
+        properties.delete('included')
+      end
       if properties.has_key?('links')
         links = {}
         links['$ref'] = '#/definitions/Links'
@@ -381,6 +370,7 @@ module SwaggerModel
       end
       response_model[response_name]['properties'] = properties
       if object['required'].size > 0
+        object['required'].delete('included')
         response_model[response_name]['required'] = object['required']
       end
 
