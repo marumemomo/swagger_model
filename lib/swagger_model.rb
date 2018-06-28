@@ -7,6 +7,8 @@ require 'active_support/core_ext'
 require 'fileutils'
 require 'logger'
 
+require_relative 'swagger_model/links'
+
 module SwaggerModel
   module OpenAPIv3
     def self.date_time_valid?(str)
@@ -210,17 +212,11 @@ module SwaggerModel
           object = parse_object(value, model, model_name)
           properties = object['properties']
           newProperties = {}
-          newProperties['allOf'] = []
-          newProperties['allOf'][0] = {}
-          newProperties['allOf'][0]['$ref'] = '#/definitions/ModelBase'
-          newProperties['allOf'][1] = {}
-          newProperties['allOf'][1]['type'] = 'object'
+          newProperties['type'] = 'object'
           if object['required'].size > 0
-              newProperties['allOf'][1]['required'] = object['required']
+              newProperties['required'] = object['required']
           end
-          properties.delete('id')
-          properties.delete('type')
-          newProperties['allOf'][1]['properties'] = properties
+          newProperties['properties'] = properties
           model[model_name][model_name] = newProperties
           obj['$ref'] = '#/definitions/' + model_name
         elsif key == 'attributes'
@@ -255,22 +251,8 @@ module SwaggerModel
           end
         end
       when 'Array'
-        if key == 'included'
-          obj['type'] = 'array'
-          obj['items'] = {}
-          array = parse_array_with_multi_model(value, model, root_key)
-          p array
-          if array.size < 2
-            obj['type'] = 'array'
-            obj['items'] = array[0]
-          else
-            @logger.error("Cannot create model because of 2 or more models included in Array")
-            exit
-          end
-        else
-          obj['type'] = 'array'
-          obj['items'] = parse_array(value, model, root_key)
-        end
+        obj['type'] = 'array'
+        obj['items'] = parse_array(value, model, root_key)
       when 'String'
         obj['type'] = 'string'
         obj['example'] = value
@@ -288,6 +270,7 @@ module SwaggerModel
         obj['format'] = 'float'
         obj['example'] = value
       else
+        @logger.warn("Unrecognized Type of `#{key}`. [key: #{key}, root_key: #{root_key}]")
         obj['type'] = ''
         obj['example'] = ''
       end
@@ -321,9 +304,7 @@ module SwaggerModel
         value = res[key]
         m[key] = get_property(key, value, model, root_key)
         if m[key]['type'] != ''
-          unless (keys.include?('id') && keys.include?('type')) && (key == 'id' || key == 'type')
-            required.push(key)
-          end
+          required.push(key)
         end
       end
       obj = {}
@@ -350,10 +331,16 @@ module SwaggerModel
       model = {}
       object = parse_object(response, model, response_name)
       properties = object['properties']
+      if properties.has_key?('included')
+        properties.delete('included')
+      end
       if properties.has_key?('links')
         links = {}
         links['$ref'] = '#/definitions/Links'
         properties['links'] = links
+        if response_model['Links'].nil?
+          response_model['Links'] = Links.template
+        end
       end
       if properties.has_key?('meta')
         meta_name = response_name + 'Meta'
@@ -364,8 +351,13 @@ module SwaggerModel
       end
       response_model[response_name]['properties'] = properties
       if object['required'].size > 0
+        object['required'].delete('included')
         response_model[response_name]['required'] = object['required']
       end
+
+      # add example
+      response_model[response_name]['example'] = response
+
       output_path = params[:output_path] || './'
       output_path_responses = File.join(output_path, 'Responses/')
       output_path_models = File.join(output_path, 'Models/')
@@ -379,6 +371,15 @@ module SwaggerModel
       for key in keys do
         File.write(File.join(output_path_models, "#{key}.yaml"), model[key].to_yaml)
       end
+
+      models = {}
+      for key in keys do
+        models[key] = model[key]
+      end
+      result = {
+        "responses" => response_model,
+        "models" => models
+      }
     end
   end
 end

@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    swagger_model (0.3.2)
+    swagger_model (0.3.6)
 
 GEM
   remote: https://rubygems.org/
