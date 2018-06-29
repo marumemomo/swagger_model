@@ -11,9 +11,9 @@ module SwaggerModel
           data = ''
           case relation_data.class.to_s
           when 'Hash'
-            data = RelationData.new(relation_data, key)
+            data = RelationData.new(relation_data)
           when 'Array'
-            data = RelationDataArray.new(relation_data, key)
+            data = RelationDataArray.new(relation_data)
           end
           relationship = {
             'key' => key,
@@ -28,7 +28,8 @@ module SwaggerModel
         }
         properties = {}
         @relationships.each do |r|
-          swagger_hash = r['data'].to_swagger_hash
+          parent_name = model_name + 'Relationships'
+          swagger_hash = r['data'].to_swagger_hash(r['key'], parent_name)
           name = swagger_hash.keys.first
           properties[r['key']] = {
             '$ref' => "#/definitions/#{name}"

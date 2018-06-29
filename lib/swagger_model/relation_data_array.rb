@@ -3,13 +3,12 @@ require_relative 'relation'
 module SwaggerModel
   module SwaggerV2
     class RelationDataArray
-      def initialize(array, parent_key)
+      def initialize(array)
         @relation = Relation.new(array.first)
-        @parent_key = parent_key
       end
 
-      def to_swagger_hash
-        name = ActiveSupport::Inflector.classify(@parent_key.gsub('-', '_')) + 'RelationDataArray'
+      def to_swagger_hash(key, parent_name)
+        name = parent_name + ActiveSupport::Inflector.classify(key.gsub('-', '_')) + 'Data'
         {
           name => {
             'type' => 'object',

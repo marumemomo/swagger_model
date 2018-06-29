@@ -3,8 +3,9 @@ require_relative 'relationships'
 module SwaggerModel
   module SwaggerV2
     class Attributes
-      def initialize(hash, model_name)
+      def initialize(hash, model_name, suffix='Attributes')
         @attributes = []
+        @suffix = suffix
         @model_name = model_name
         hash.keys.each do |key|
           value = hash[key]
@@ -25,7 +26,7 @@ module SwaggerModel
         end
         hash['properties'] = properties
         hash['required'] = properties.keys
-        name = @model_name + 'Attributes'
+        name = @model_name + @suffix
         model[name] = hash
         {
           '$ref': "#/definitions/#{name}"
@@ -39,7 +40,8 @@ module SwaggerModel
         key = e['key']
         case e['type']
         when 'object'
-          attribute_name = @model_name + key.capitalize + 'Attributes'
+          name = ActiveSupport::Inflector.classify(key.gsub('-', '_'))
+          attribute_name = @model_name + name + 'Attributes'
           attribute['$ref'] = "#/definitions/#{attribute_name}"
           e['attributes'].to_swagger_hash(model)
         when 'array'
@@ -79,12 +81,11 @@ module SwaggerModel
         when nil
           attribute = {}
         when 'object'
-          p value
+          name = ActiveSupport::Inflector.classify(key.gsub('-', '_'))
           attribute = {
             'type' => 'object',
-            'attributes' => Attributes.new(value, @model_name + key.capitalize)
+            'attributes' => Attributes.new(value, @model_name + name)
           }
-          p attribute['attributes']
         when 'array'
           item = value.first
           attribute = {

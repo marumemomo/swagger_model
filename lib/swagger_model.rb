@@ -11,6 +11,7 @@ require_relative 'swagger_model/links'
 require_relative 'swagger_model/relationships'
 require_relative 'swagger_model/model'
 require_relative 'swagger_model/included'
+require_relative 'swagger_model/attributes'
 
 module SwaggerModel
   module OpenAPIv3
@@ -325,8 +326,6 @@ module SwaggerModel
       response_model[response_name]['type'] = "object"
       response_model[response_name]['properties'] = {}
       model = {}
-      object = parse_object(response, model, response_name)
-      properties = object['properties']
 
       # Create response data
       if response.has_key?('data')
@@ -342,18 +341,16 @@ module SwaggerModel
             'items' => m.to_swagger_hash(model)
           }
         end
-        properties.delete('data')
       end
 
       # Create included key models but not add included key to response
-      if properties.has_key?('included')
+      if response.has_key?('included')
         included = Included.new(response['included'])
         included.models_to_swagger_hash(model)
-        properties.delete('included')
       end
 
       # Create links from template
-      if properties.has_key?('links')
+      if response.has_key?('links')
         links = {}
         links['$ref'] = '#/definitions/Links'
         response_model[response_name]['properties']['links'] = links
@@ -362,19 +359,18 @@ module SwaggerModel
         end
       end
 
-      # TODO: Create Meta
-      if properties.has_key?('meta')
+      # Create Meta
+      if response.has_key?('meta')
         meta_name = response_name + 'Meta'
-        response_model[meta_name] = properties['meta']
+        meta = Attributes.new(response['meta'], meta_name, '')
+        meta.to_swagger_hash(response_model)
         meta = {}
         meta['$ref'] = '#/definitions/' + meta_name
-        properties['meta'] = meta
+        response_model[response_name]['properties']['meta'] = meta
       end
-      # response_model[response_name]['properties'] = properties
-      if object['required'].size > 0
-        object['required'].delete('included')
-        response_model[response_name]['required'] = object['required']
-      end
+
+      # Set required
+      response_model[response_name]['required'] = response_model[response_name]['properties'].keys
 
       # add example
       response_model[response_name]['example'] = response
