@@ -40,10 +40,9 @@ module SwaggerModel
         hash['required'] = properties.keys
         name = model_name + 'Relationships'
         model[name] = hash
-        model[name]['required'] = hash
 
         {
-          '$ref': "#/definitions/#{name}"
+          '$ref' => "#/definitions/#{name}"
         }
       end
     end
