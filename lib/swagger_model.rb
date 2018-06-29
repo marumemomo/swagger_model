@@ -8,6 +8,7 @@ require 'fileutils'
 require 'logger'
 
 require_relative 'swagger_model/links'
+require_relative 'swagger_model/relationships'
 
 module SwaggerModel
   module OpenAPIv3
@@ -231,14 +232,15 @@ module SwaggerModel
           end
           obj['$ref'] = '#/definitions/' + model_name
         elsif key == 'relationships'
-          object = parse_object(value, model, root_key)
-          properties = object['properties']
+          relationships = Relationships.new(value)
+          hash = relationships.to_swagger_hash(model)
           model_name = root_key + 'Relationships'
           model[root_key][model_name] = {}
           model[root_key][model_name]['type'] = 'object'
-          model[root_key][model_name]['properties'] = properties
-          if object['required'].size > 0
-            model[root_key][model_name]['required'] = object['required']
+          model[root_key][model_name]['properties'] = hash
+
+          if hash.keys.size > 0
+            model[root_key][model_name]['required'] = hash.keys
           end
           obj['$ref'] = '#/definitions/' + model_name
         else
