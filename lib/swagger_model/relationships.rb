@@ -22,17 +22,28 @@ module SwaggerModel
           @relationships.push(relationship)
         end
       end
-      def to_swagger_hash(model)
-        hash = {}
+      def to_swagger_hash(model, model_name)
+        hash = {
+          'type' => 'object'
+        }
+        properties = {}
         @relationships.each do |r|
           swagger_hash = r['data'].to_swagger_hash
-          model_name = swagger_hash.keys.first
-          hash[r['key']] = {
-            '$ref' => "#/definitions/#{model_name}"
+          name = swagger_hash.keys.first
+          properties[r['key']] = {
+            '$ref' => "#/definitions/#{name}"
           }
-          model[model_name] = swagger_hash[model_name]
+          model[name] = swagger_hash[name]
         end
-        hash
+        hash['properties'] = properties
+        hash['required'] = properties.keys
+        name = model_name + 'Relationships'
+        model[name] = hash
+        model[name]['required'] = hash
+
+        {
+          '$ref': "#/definitions/#{name}"
+        }
       end
     end
   end

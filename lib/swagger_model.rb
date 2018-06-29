@@ -9,6 +9,8 @@ require 'logger'
 
 require_relative 'swagger_model/links'
 require_relative 'swagger_model/relationships'
+require_relative 'swagger_model/model'
+require_relative 'swagger_model/included'
 
 module SwaggerModel
   module OpenAPIv3
@@ -233,16 +235,7 @@ module SwaggerModel
           obj['$ref'] = '#/definitions/' + model_name
         elsif key == 'relationships'
           relationships = Relationships.new(value)
-          hash = relationships.to_swagger_hash(model)
-          model_name = root_key + 'Relationships'
-          model[root_key][model_name] = {}
-          model[root_key][model_name]['type'] = 'object'
-          model[root_key][model_name]['properties'] = hash
-
-          if hash.keys.size > 0
-            model[root_key][model_name]['required'] = hash.keys
-          end
-          obj['$ref'] = '#/definitions/' + model_name
+          obj = relationships.to_swagger_hash(model, root_key)
         else
           object = parse_object(value, model, root_key)
           properties = object['properties']
@@ -330,20 +323,46 @@ module SwaggerModel
       response_model = {}
       response_model[response_name] = {}
       response_model[response_name]['type'] = "object"
+      response_model[response_name]['properties'] = {}
       model = {}
       object = parse_object(response, model, response_name)
       properties = object['properties']
+
+      # Create response data
+      if response.has_key?('data')
+        data = response['data']
+        case data.class.to_s
+        when 'Hash'
+          m = Model.new(data)
+          response_model[response_name]['properties']['data'] = m.to_swagger_hash(model)
+        when 'Array'
+          m = Model.new(data.first)
+          response_model[response_name]['properties']['data'] = {
+            'type' => 'array',
+            'items' => m.to_swagger_hash(model)
+          }
+        end
+        properties.delete('data')
+      end
+
+      # Create included key models but not add included key to response
       if properties.has_key?('included')
+        included = Included.new(response['included'])
+        included.models_to_swagger_hash(model)
         properties.delete('included')
       end
+
+      # Create links from template
       if properties.has_key?('links')
         links = {}
         links['$ref'] = '#/definitions/Links'
-        properties['links'] = links
+        response_model[response_name]['properties']['links'] = links
         if response_model['Links'].nil?
           response_model['Links'] = Links.template
         end
       end
+
+      # TODO: Create Meta
       if properties.has_key?('meta')
         meta_name = response_name + 'Meta'
         response_model[meta_name] = properties['meta']
@@ -351,7 +370,7 @@ module SwaggerModel
         meta['$ref'] = '#/definitions/' + meta_name
         properties['meta'] = meta
       end
-      response_model[response_name]['properties'] = properties
+      # response_model[response_name]['properties'] = properties
       if object['required'].size > 0
         object['required'].delete('included')
         response_model[response_name]['required'] = object['required']
