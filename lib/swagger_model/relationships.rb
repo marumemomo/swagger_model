@@ -30,11 +30,13 @@ module SwaggerModel
         @relationships.each do |r|
           parent_name = model_name + 'Relationships'
           swagger_hash = r['data'].to_swagger_hash(r['key'], parent_name)
-          name = swagger_hash.keys.first
-          properties[r['key']] = {
-            '$ref' => "#/definitions/#{name}"
-          }
-          model[name] = swagger_hash[name]
+          unless swagger_hash.nil?
+            name = swagger_hash.keys.first
+            properties[r['key']] = {
+              '$ref' => "#/definitions/#{name}"
+            }
+            model[name] = swagger_hash[name]
+          end
         end
         hash['properties'] = properties
         hash['required'] = properties.keys

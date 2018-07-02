@@ -4,10 +4,16 @@ module SwaggerModel
   module SwaggerV2
     class RelationDataArray
       def initialize(array)
-        @relation = Relation.new(array.first)
+        if array.size > 0
+          @relation = Relation.new(array.first)
+        end
+
       end
 
       def to_swagger_hash(key, parent_name)
+        if @relation.nil?
+          return nil
+        end
         name = parent_name + ActiveSupport::Inflector.classify(key.gsub('-', '_')) + 'Data'
         {
           name => {

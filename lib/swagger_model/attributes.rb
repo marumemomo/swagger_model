@@ -10,7 +10,6 @@ module SwaggerModel
         hash.keys.each do |key|
           value = hash[key]
           attribute = get_attribute(value, key)
-          attribute['key'] = key
           @attributes.push(attribute)
         end
       end
@@ -90,13 +89,14 @@ module SwaggerModel
           item = value.first
           attribute = {
             'type' => 'array',
-            'item' => get_attribute(item)
+            'item' => get_attribute(item, key)
           }
         else
           attribute = {
             'type' => type
           }
         end
+        attribute['key'] = key
         attribute
       end
       def get_type(value)
