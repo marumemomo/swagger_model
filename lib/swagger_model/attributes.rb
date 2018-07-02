@@ -78,7 +78,9 @@ module SwaggerModel
             'example' => value
           }
         when nil
-          attribute = {}
+          attribute = {
+            'type' => 'UNKNOWN'
+          }
         when 'object'
           name = ActiveSupport::Inflector.classify(key.gsub('-', '_'))
           attribute = {
