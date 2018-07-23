@@ -28,6 +28,7 @@ module SwaggerModel
         }
         properties = {}
         @relationships.each do |r|
+          next if r['data'].nil? || r['data'] == ""
           parent_name = model_name + 'Relationships'
           swagger_hash = r['data'].to_swagger_hash(r['key'], parent_name)
           unless swagger_hash.nil?
