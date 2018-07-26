@@ -28,7 +28,7 @@ module SwaggerModel
         name = @model_name + @suffix
         model[name] = hash
         {
-          '$ref': "#/definitions/#{name}"
+          '$ref' => "#/definitions/#{name}"
         }
       end
 
