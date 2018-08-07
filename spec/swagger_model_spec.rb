@@ -130,4 +130,15 @@ describe 'read json' do
     EOS
     result = SwaggerModel::SwaggerV2.create_from_json(json_string: json, output_path: './example/output/', response_name: "ExampleV2ArrayResponse")
   end
+
+  it 'create error model from json' do
+    json = <<-'EOS'
+    {
+      "errors": {
+        "status": "400"
+      }
+    }
+    EOS
+    result = SwaggerModel::SwaggerV2.create_from_json(json_string: json, output_path: './example/output/', response_name: "ErrorResponse")
+  end
 end

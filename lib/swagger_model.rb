@@ -12,6 +12,8 @@ require_relative 'swagger_model/relationships'
 require_relative 'swagger_model/model'
 require_relative 'swagger_model/included'
 require_relative 'swagger_model/attributes'
+require_relative 'swagger_model/error_model'
+require_relative 'swagger_model/error_model_meta'
 
 module SwaggerModel
   module OpenAPIv3
@@ -367,6 +369,23 @@ module SwaggerModel
         meta = {}
         meta['$ref'] = '#/definitions/' + meta_name
         response_model[response_name]['properties']['meta'] = meta
+      end
+
+      # Create Error
+      if response.has_key?('errors')
+        response_model[response_name] = {
+          'type' => 'object',
+          'properties' => {
+            'errors' => {
+              'type' => 'array',
+              'items' => {
+                '$ref' => '#/definitions/ErrorModel'
+              }
+            }
+          }
+        }
+        response_model['ErrorModel'] = ErrorModel.new().to_swagger_hash
+        response_model['ErrorModelMeta'] = ErrorModelMeta.new().to_swagger_hash
       end
 
       # Set required
