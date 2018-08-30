@@ -29,9 +29,17 @@ module SwaggerModel
               'example' => @type
             },
             'attributes' => @attributes.to_swagger_hash(aModel)
-          }
+          },
+          'required' => [
+            'id',
+            'type',
+            'attributes'
+          ]
         }
-        hash['properties']['relationships'] = @relationships.to_swagger_hash(aModel, @model_name) unless @relationships.nil?
+        unless @relationships.nil?
+          hash['properties']['relationships'] = @relationships.to_swagger_hash(aModel, @model_name)
+          hash['required'].push('relationships')
+        end
         aModel[@model_name] = hash
 
         {

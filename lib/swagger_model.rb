@@ -310,6 +310,12 @@ module SwaggerModel
       obj['required'] = required
       obj
     end
+    def self.result_to_yaml(result)
+      models = {}
+      result['models'].each { |key, value| models.merge!(value) }
+      data = result['responses'].merge(models)
+      data.to_yaml
+    end
     def self.create_from_json(params)
       response = {}.to_json
       json_string = params[:json_string]
