@@ -4,11 +4,15 @@ require_relative 'attributes'
 module SwaggerModel
   module SwaggerV2
     class Model
+      attr_accessor :relationships, :type
+
       def initialize(hash)
         @id = hash['id']
         @type = hash['type']
         @model_name = ActiveSupport::Inflector.classify(@type.gsub('-', '_'))
-        @attributes = Attributes.new(hash['attributes'], @model_name)
+        if !hash['attributes'].nil?
+          @attributes = Attributes.new(hash['attributes'], @model_name)
+        end
         if !hash['relationships'].nil?
           @relationships = Relationships.new(hash['relationships'])
         end
@@ -27,15 +31,17 @@ module SwaggerModel
             'type' => {
               'type' => 'string',
               'example' => @type
-            },
-            'attributes' => @attributes.to_swagger_hash(aModel)
+            }
           },
           'required' => [
             'id',
-            'type',
-            'attributes'
+            'type'
           ]
         }
+        unless @attributes.nil?
+          hash['properties']['attributes'] = @attributes.to_swagger_hash(aModel)
+          hash['required'].push('attributes')
+        end
         unless @relationships.nil?
           hash['properties']['relationships'] = @relationships.to_swagger_hash(aModel, @model_name)
           hash['required'].push('relationships')

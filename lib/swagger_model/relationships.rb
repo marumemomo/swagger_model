@@ -4,6 +4,8 @@ require_relative 'relation_data_array'
 module SwaggerModel
   module SwaggerV2
     class Relationships
+      attr_accessor :relationships
+
       def initialize(hash)
         @relationships = []
         hash.keys.each do |key|

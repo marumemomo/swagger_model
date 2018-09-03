@@ -335,15 +335,20 @@ module SwaggerModel
       response_model[response_name]['properties'] = {}
       model = {}
 
+      # For validate
+      modelData = []
+
       # Create response data
       if response.has_key?('data')
         data = response['data']
         case data.class.to_s
         when 'Hash'
           m = Model.new(data)
+          modelData.push(m)
           response_model[response_name]['properties']['data'] = m.to_swagger_hash(model)
         when 'Array'
           m = Model.new(data.first)
+          modelData.push(m)
           response_model[response_name]['properties']['data'] = {
             'type' => 'array',
             'items' => m.to_swagger_hash(model)
@@ -354,6 +359,7 @@ module SwaggerModel
       # Create included key models but not add included key to response
       if response.has_key?('included')
         included = Included.new(response['included'])
+        modelData.concat(included.models)
         included.models_to_swagger_hash(model)
       end
 
@@ -392,6 +398,24 @@ module SwaggerModel
         }
         response_model['ErrorModel'] = ErrorModel.new().to_swagger_hash
         response_model['ErrorModelMeta'] = ErrorModelMeta.new().to_swagger_hash
+      end
+
+      # validate models
+      modelTypes = modelData.map { |e| e.type  }
+      modelData.each do |m|
+        next if m.relationships.nil?
+        next if m.relationships.relationships.empty?
+        m.relationships.relationships.each do |e|
+          next if e['data'].relation.nil?
+          type = e['data'].relation.type
+          if !modelTypes.include?(type)
+            newModel = Model.new({
+              'id' => '',
+              'type' => type
+              })
+            newModel.to_swagger_hash(model)
+          end
+        end
       end
 
       # Set required

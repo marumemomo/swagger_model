@@ -1,6 +1,7 @@
 module SwaggerModel
   module SwaggerV2
     class RelationData
+      attr_accessor :relation
       def initialize(hash)
         @relation = Relation.new(hash)
       end

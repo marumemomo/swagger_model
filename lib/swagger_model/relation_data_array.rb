@@ -3,6 +3,7 @@ require_relative 'relation'
 module SwaggerModel
   module SwaggerV2
     class RelationDataArray
+      attr_accessor :relation
       def initialize(array)
         if array.size > 0
           @relation = Relation.new(array.first)

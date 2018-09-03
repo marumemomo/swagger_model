@@ -4,6 +4,7 @@ require 'active_support/core_ext'
 module SwaggerModel
   module SwaggerV2
     class Relation
+      attr_accessor :type
       def initialize(hash)
         @type = hash['type']
       end
