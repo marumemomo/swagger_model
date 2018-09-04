@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    swagger_model (0.4.5)
+    swagger_model (0.4.6)
 
 GEM
   remote: https://rubygems.org/
@@ -45,4 +45,4 @@ DEPENDENCIES
   swagger_model!
 
 BUNDLED WITH
-   1.16.1
+   1.16.4
