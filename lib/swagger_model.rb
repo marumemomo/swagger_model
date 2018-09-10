@@ -406,7 +406,9 @@ module SwaggerModel
         next if m.relationships.nil?
         next if m.relationships.relationships.empty?
         m.relationships.relationships.each do |e|
+          next if ![SwaggerModel::SwaggerV2::RelationDataArray, SwaggerModel::SwaggerV2::RelationData].include?(e['data'].class)
           next if e['data'].relation.nil?
+          next if e['data'].relation.type.nil?
           type = e['data'].relation.type
           if !modelTypes.include?(type)
             newModel = Model.new({
