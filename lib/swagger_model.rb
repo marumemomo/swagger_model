@@ -313,7 +313,9 @@ module SwaggerModel
     def self.result_to_yaml(result)
       models = {}
       result['models'].each { |key, value| models.merge!(value) }
-      data = result['responses'].merge(models)
+      data = {
+        'definitions' => result['responses'].merge(models)
+      }
       data.to_yaml
     end
     def self.create_from_json(params)
@@ -426,18 +428,20 @@ module SwaggerModel
       # add example
       response_model[response_name]['example'] = response
 
-      output_path = params[:output_path] || './'
-      output_path_responses = File.join(output_path, 'Responses/')
-      output_path_models = File.join(output_path, 'Models/')
-
-      FileUtils::mkdir_p output_path_responses
-      FileUtils::mkdir_p output_path_models
-
-      File.write(File.join(output_path_responses, "#{response_name}.yaml"), response_model.to_yaml)
-
       keys = model.keys
-      for key in keys do
-        File.write(File.join(output_path_models, "#{key}.yaml"), model[key].to_yaml)
+      unless params[:output_path].nil?
+        output_path = params[:output_path]
+        output_path_responses = File.join(output_path, 'Responses/')
+        output_path_models = File.join(output_path, 'Models/')
+
+        FileUtils::mkdir_p output_path_responses
+        FileUtils::mkdir_p output_path_models
+
+        File.write(File.join(output_path_responses, "#{response_name}.yaml"), response_model.to_yaml)
+
+        for key in keys do
+          File.write(File.join(output_path_models, "#{key}.yaml"), model[key].to_yaml)
+        end
       end
 
       models = {}
